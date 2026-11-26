@@ -1,0 +1,10 @@
+# fichiers générés / locaux
+skins/*.png
+skills/ACTIVE.txt
+skins/ACTIVE.txt
+_tools/skin_backup.json
+_tools/skin_state.json
+*.log
+*.part
+Thumbs.db
+desktop.ini
