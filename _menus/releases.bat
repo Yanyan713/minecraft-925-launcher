@@ -4,9 +4,9 @@ title RELEASES
 cls
 echo.
 echo   RELEASES
-echo   103 versions, de la plus recente a la 1.0
+echo   103 releases, newest first down to 1.0
 echo.
-echo   Tape un numero, ou directement un nom de version (ex: 1.20.4).  0 = retour
+echo   Type a number, or a version name directly - e.g. 1.20.4.  0 = back
 echo.
 echo     1^) 26.3
 echo     2^) 26.2
@@ -113,7 +113,7 @@ echo   102^) 1.1
 echo   103^) 1.0
 echo.
 set "N="
-set /p N=  Choix : 
+set /p N=  Choice : 
 if "%N%"=="" goto :eof
 if "%N%"=="0" goto :eof
 if exist "%~dp0..\versions\%N%\start.bat" ( start "" "%~dp0..\versions\%N%\start.bat" & goto :eof )
@@ -220,6 +220,6 @@ if "%N%"=="100" ( start "" "%~dp0..\versions\1.2.1\start.bat" & goto :eof )
 if "%N%"=="101" ( start "" "%~dp0..\versions\1.2.2\start.bat" & goto :eof )
 if "%N%"=="102" ( start "" "%~dp0..\versions\1.1\start.bat" & goto :eof )
 if "%N%"=="103" ( start "" "%~dp0..\versions\1.0\start.bat" & goto :eof )
-echo   Choix invalide.
+echo   Invalid choice.
 timeout /t 2 >nul
 goto :eof

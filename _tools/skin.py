@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Système de skin pour l'installation Minecraft locale.
+Skin system for the local Minecraft installation.
 
-Le jeu (mode hors ligne) affiche le skin par défaut contenu dans le jar de chaque
-version. Cet outil remplace ce skin par le tien, dans TOUS les jars installés,
-avec sauvegarde des fichiers d'origine (donc 100 % réversible).
+The game (offline mode) shows the default skin stored inside each version's jar.
+This tool replaces that skin with yours, in ALL installed jars, while backing up
+the original textures first, so everything is fully reversible.
 
-Commandes :
-  status                      -> skin actif + nombre de jars patchés
-  list                        -> liste les skins disponibles dans skins\\
-  import <fichier.png> [nom]  -> ajoute un skin depuis un fichier
-  fetch <pseudo> [nom]        -> récupère le skin officiel d'un pseudo Java
-  apply <nom>                 -> applique un skin (patche les jars ; -q pour silence)
-  ensure                      -> re-patche les versions pas encore traitées (appelé au lancement)
-  restore                     -> remet les textures d'origine (vanilla)
-  refresh                     -> rescanne les skins (resynchronise l'état)
+Commands:
+  status                      -> active skin + number of patched jars
+  list                        -> list the skins available in skins\\
+  import <file.png> [name]    -> add a skin from a file
+  fetch <username> [name]     -> download the official skin of a Java username
+  apply <name>                -> apply a skin (patches the jars; -q for silence)
+  ensure                      -> re-patch versions not processed yet (called at launch)
+  restore                     -> put the original textures back (vanilla)
+  refresh                     -> rescan skins, resync the state
 """
 import argparse, base64, io, json, os, shutil, sys, time, urllib.request, zipfile
 
@@ -26,7 +26,7 @@ BACKUP_JSON = os.path.join(ROOT, "_tools", "skin_backup.json")
 STATE = os.path.join(ROOT, "_tools", "skin_state.json")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MinecraftSkinTool/1.0"
 
-# entrées de jar correspondant au skin par défaut
+# jar entries holding the default skin
 TARGET_NAMES = {"steve.png", "char.png"}
 
 try:
@@ -35,7 +35,7 @@ except ImportError:
     Image = None
 
 
-# ---------------------------------------------------------------- utilitaires
+# ---------------------------------------------------------------- helpers
 def load_state():
     if os.path.exists(STATE):
         try:
@@ -58,15 +58,15 @@ def http_get(url, timeout=45):
 
 
 def norm_skin(src_bytes):
-    """Retourne (png 64x64, png legacy 64x32). Corrige les peaux 64x32 / HD."""
+    """Return (png 64x64, legacy png 64x32). Fixes 64x32 and HD skins."""
     if Image is None:
-        raise RuntimeError("Pillow est requis (pip install pillow)")
+        raise RuntimeError("Pillow is required (pip install pillow)")
     im = Image.open(io.BytesIO(src_bytes)).convert("RGBA")
     if im.size == (64, 64):
         big = im
     elif im.size == (64, 32):
-        big = im.resize((64, 64), Image.NEAREST)          # peau 1.7 -> 1.8+
-        big.paste(im.crop((0, 16, 64, 32)), (0, 48))       # jambes/bas recopiés
+        big = im.resize((64, 64), Image.NEAREST)          # 1.7 skin -> 1.8+
+        big.paste(im.crop((0, 16, 64, 32)), (0, 48))       # legs / lower half copied
     else:
         big = im.resize((64, 64), Image.NEAREST)
     legacy = big.crop((0, 0, 64, 32))
@@ -118,8 +118,8 @@ def save_backup(bk):
 
 
 def patch_jar(jar, wide_png, legacy_png, bk=None):
-    """Réécrit le jar en remplaçant steve.png / char.png.
-    Les textures d'origine sont mémorisées dans bk (base64) pour restauration."""
+    """Rewrite the jar, replacing steve.png / char.png.
+    Original textures are stored in bk (base64) so they can be restored."""
     vid = os.path.basename(os.path.dirname(jar))
     with zipfile.ZipFile(jar) as z:
         entries = skin_entries(z)
@@ -145,7 +145,7 @@ def patch_jar(jar, wide_png, legacy_png, bk=None):
 
 
 def restore_jar(jar, bk):
-    """Remet les textures d'origine mémorisées dans bk. Renvoie True si réécrit."""
+    """Put back the original textures stored in bk. Returns True if rewritten."""
     vid = os.path.basename(os.path.dirname(jar))
     slot = (bk or {}).get(vid)
     if not slot:
@@ -175,7 +175,7 @@ def apply_skin(name, quiet=False, only_missing=None):
     st = load_state()
     paths = skin_paths()
     if name not in paths:
-        print("Skin inconnu: %s (voir: skin.py list)" % name)
+        print("Unknown skin: %s (see: skin.py list)" % name)
         return 1
     with open(paths[name], "rb") as f:
         src = f.read()
@@ -202,7 +202,7 @@ def apply_skin(name, quiet=False, only_missing=None):
     if only_missing is not None:
         todo = [t for t in todo if t[0] not in only_missing]
     if not quiet:
-        print("Application de « %s » sur %d/%d version(s)..." % (name, len(todo), len(targets)))
+        print("Applying \"%s\" to %d/%d version(s)..." % (name, len(todo), len(targets)))
     t0 = time.time()
     done = 0
     bk = load_backup()
@@ -225,7 +225,7 @@ def apply_skin(name, quiet=False, only_missing=None):
     save_state(st)
     write_active(name)
     if not quiet:
-        print("Terminé en %.0f s — %d jar(s) patché(s). Lance launch_minecraft.bat et profite." % (time.time() - t0, done))
+        print("Done in %.0f s - %d jar(s) patched. Launch launch_minecraft.bat and enjoy." % (time.time() - t0, done))
     return 0
 
 
@@ -244,7 +244,7 @@ def restore_all():
     st["active"] = None; st["skin_sha"] = None; st["patched"] = {}
     save_state(st)
     write_active(None)
-    print("Textures d'origine restaurées sur %d version(s)." % n)
+    print("Original textures restored on %d version(s)." % n)
     return 0
 
 
@@ -252,27 +252,27 @@ def pick_and_apply():
     paths = skin_paths()
     if not paths:
         print()
-        print("  Aucun skin dans D:\\minecraft\\skins")
-        print("  -> option 2 (importer un .png) ou option 3 (pseudo Java)")
+        print("  No skin in skins\\")
+        print("  -> option 2 (import a .png) or option 3 (Java username)")
         return 1
     st = load_state()
     names = list(paths)
     print()
-    print("  Skins disponibles :")
+    print("  Available skins:")
     for i, n in enumerate(names, 1):
-        mark = "  <-- actif" if n == st.get("active") else ""
+        mark = "  <-- active" if n == st.get("active") else ""
         print("   %2d) %s%s" % (i, n, mark))
     print()
-    print("   0) retour")
+    print("   0) back")
     print()
     try:
-        c = input("  Numero du skin a appliquer : ").strip()
+        c = input("  Number of the skin to apply: ").strip()
     except EOFError:
         return 1
     if not c or c == "0":
         return 1
     if not c.isdigit() or not (1 <= int(c) <= len(names)):
-        print("  Choix invalide.")
+        print("  Invalid choice.")
         return 1
     return apply_skin(names[int(c) - 1])
 
@@ -280,7 +280,7 @@ def pick_and_apply():
 # ---------------------------------------------------------------- import / fetch
 def import_file(path, name=None):
     if not os.path.exists(path):
-        print("Fichier introuvable: %s" % path); return 1
+        print("File not found: %s" % path); return 1
     with open(path, "rb") as f:
         data = f.read()
     wide, legacy = norm_skin(data)
@@ -289,7 +289,7 @@ def import_file(path, name=None):
     dst = os.path.join(SKINS, name + ".png")
     with open(dst, "wb") as f:
         f.write(wide)
-    print("Skin importé: %s -> %s" % (name, dst))
+    print("Skin imported: %s -> %s" % (name, dst))
     return 0
 
 
@@ -307,9 +307,9 @@ def fetch_skin(username, name=None):
                 tex = json.loads(base64.b64decode(prop["value"]))
                 url = tex["textures"]["SKIN"]["url"]
                 urls.append(url)
-                print("Profil %s (%s) trouvé." % (prof.get("name"), uuid))
+                print("Profile %s (%s) found." % (prof.get("name"), uuid))
     except Exception as e:
-        print("API Mojang indisponible (%s), tentative via mc-heads.net..." % type(e).__name__)
+        print("Mojang API unavailable (%s), trying mc-heads.net..." % type(e).__name__)
     urls.append("https://mc-heads.net/skin/" + username)
     urls.append("https://minotar.net/skin/" + username)
 
@@ -325,12 +325,12 @@ def fetch_skin(username, name=None):
             dst = os.path.join(SKINS, name + ".png")
             with open(dst, "wb") as f:
                 f.write(wide)
-            print("Skin de « %s » récupéré depuis %s -> %s" % (username, u.split("/")[2], dst))
+            print("Skin of \"%s\" downloaded from %s -> %s" % (username, u.split("/")[2], dst))
             return 0
         except Exception as e:
             last = e
-    print("Impossible de récupérer le skin de %s (%s)." % (username, last))
-    print("Astuce : télécharge le .png à la main puis : skin.py import <fichier>")
+    print("Could not download the skin of %s (%s)." % (username, last))
+    print("Tip: download the .png manually, then: skin.py import <file>")
     return 1
 
 
@@ -346,11 +346,11 @@ def main():
 
     if a.cmd == "status":
         paths = skin_paths()
-        print("Skin actif : %s" % (st.get("active") or "(aucun — vanilla)"))
-        print("Skins disponibles : %d" % len(paths))
+        print("Active skin: %s" % (st.get("active") or "(none - vanilla)"))
+        print("Available skins: %d" % len(paths))
         for k in paths:
-            print("   - %s%s" % (k, "  <-- actif" if k == st.get("active") else ""))
-        print("Versions patchées : %d / %d" % (len(st.get("patched") or {}), len(version_dirs())))
+            print("   - %s%s" % (k, "  <-- active" if k == st.get("active") else ""))
+        print("Patched versions: %d / %d" % (len(st.get("patched") or {}), len(version_dirs())))
         return 0
 
     if a.cmd == "list":
@@ -360,12 +360,12 @@ def main():
 
     if a.cmd == "import":
         if not a.arg:
-            print("usage: skin.py import <fichier.png> [nom]"); return 1
+            print("usage: skin.py import <file.png> [name]"); return 1
         return import_file(a.arg, a.arg2)
 
     if a.cmd == "fetch":
         if not a.arg:
-            print("usage: skin.py fetch <pseudo> [nom]"); return 1
+            print("usage: skin.py fetch <username> [name]"); return 1
         rc = fetch_skin(a.arg, a.arg2)
         if rc == 0 and a.arg2 is None:
             return apply_skin(a.arg, a.quiet)
@@ -386,7 +386,7 @@ def main():
         return pick_and_apply()
 
     if a.cmd == "refresh":
-        print("État actuel sauvegardé, %d skin(s) détecté(s)." % len(skin_paths()))
+        print("State saved, %d skin(s) detected." % len(skin_paths()))
         return 0
 
     print(__doc__)

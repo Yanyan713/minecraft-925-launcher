@@ -4,9 +4,9 @@ title ALPHA / BETA
 cls
 echo.
 echo   ALPHA / BETA
-echo   61 versions historiques (2009-2011)
+echo   61 historical versions, 2009-2011
 echo.
-echo   Tape un numero, ou directement un nom de version (ex: 1.20.4).  0 = retour
+echo   Type a number, or a version name directly - e.g. 1.20.4.  0 = back
 echo.
 echo     1^) b1.8.1
 echo     2^) b1.8
@@ -71,7 +71,7 @@ echo    60^) rd-132328
 echo    61^) rd-132211
 echo.
 set "N="
-set /p N=  Choix : 
+set /p N=  Choice : 
 if "%N%"=="" goto :eof
 if "%N%"=="0" goto :eof
 if exist "%~dp0..\versions\%N%\start.bat" ( start "" "%~dp0..\versions\%N%\start.bat" & goto :eof )
@@ -136,6 +136,6 @@ if "%N%"=="58" ( start "" "%~dp0..\versions\rd-160052\start.bat" & goto :eof )
 if "%N%"=="59" ( start "" "%~dp0..\versions\rd-20090515\start.bat" & goto :eof )
 if "%N%"=="60" ( start "" "%~dp0..\versions\rd-132328\start.bat" & goto :eof )
 if "%N%"=="61" ( start "" "%~dp0..\versions\rd-132211\start.bat" & goto :eof )
-echo   Choix invalide.
+echo   Invalid choice.
 timeout /t 2 >nul
 goto :eof

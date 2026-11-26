@@ -4,9 +4,9 @@ title SNAPSHOTS
 cls
 echo.
 echo   SNAPSHOTS
-echo   761 versions de developpement
+echo   761 development versions
 echo.
-echo   Tape un numero, ou directement un nom de version (ex: 1.20.4).  0 = retour
+echo   Type a number, or a version name directly - e.g. 1.20.4.  0 = back
 echo.
 echo     1^) 26.4-snapshot-10
 echo     2^) 26.4-snapshot-9
@@ -771,7 +771,7 @@ echo   760^) 1.4
 echo   761^) 1.3
 echo.
 set "N="
-set /p N=  Choix : 
+set /p N=  Choice : 
 if "%N%"=="" goto :eof
 if "%N%"=="0" goto :eof
 if exist "%~dp0..\versions\%N%\start.bat" ( start "" "%~dp0..\versions\%N%\start.bat" & goto :eof )
@@ -1536,6 +1536,6 @@ if "%N%"=="758" ( start "" "%~dp0..\versions\1.4.3\start.bat" & goto :eof )
 if "%N%"=="759" ( start "" "%~dp0..\versions\1.4.1\start.bat" & goto :eof )
 if "%N%"=="760" ( start "" "%~dp0..\versions\1.4\start.bat" & goto :eof )
 if "%N%"=="761" ( start "" "%~dp0..\versions\1.3\start.bat" & goto :eof )
-echo   Choix invalide.
+echo   Invalid choice.
 timeout /t 2 >nul
 goto :eof
